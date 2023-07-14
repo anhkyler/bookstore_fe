@@ -29,6 +29,13 @@ export class ProductService {
     );
   }
 
+  getProductByname(theProductName:string): Observable<Product[]> {
+    const searchUrl = `${this.baseUrl}/search/findByNameContaining?name=${theProductName}`;
+    return this.httpClient.get<GetResponseProducts>(searchUrl).pipe(
+      map(response => response._embedded.products)
+    );
+  }
+
 }
 
 interface GetResponseProducts {
