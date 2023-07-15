@@ -16,6 +16,11 @@ export class ProductListComponent implements OnInit {
   currentCategoryId:number | undefined;
   currentCategoryName: string = "";
   searchMode:boolean =false ;
+  thePageNumber:number = 1;
+  theTotalElements: number=0;
+  thePageSize:number=5;
+  previoudCategoryId: number = 1;
+  previousKeyword: string = "";
   constructor(private productService: ProductService,
     private route:ActivatedRoute) {   }
 
@@ -38,11 +43,21 @@ export class ProductListComponent implements OnInit {
 
   handleSearchProducts() {
     const searchKeyword: string = this.route.snapshot.paramMap.get('keyword')!;
-    this.productService.getProductByname(searchKeyword).subscribe(
-      (data:any) => {
-        this.products = data;
-      }
-    );
+    if(this.previousKeyword != searchKeyword){
+      this.thePageNumber = 1;
+    }
+    this.previousKeyword = searchKeyword;
+    this.productService.getProductBynamePaginate(this.thePageNumber - 1,
+                          this.thePageSize, searchKeyword).subscribe(this.processResult());
+  }
+
+  processResult(){
+    return (data : any) => {
+      this.products = data._embedded.products;
+      this.thePageNumber = data.page.number + 1;
+      this.thePageSize = data.page.size;
+      this.theTotalElements = data.page.totalElements;
+    }
   }
 
   handleListProducts(){
@@ -56,10 +71,25 @@ export class ProductListComponent implements OnInit {
     }
     console.log(this.currentCategoryName);
     console.log(this.route.snapshot.paramMap);
-    this.productService.getProductList(this.currentCategoryId).subscribe(
+    if(this.previoudCategoryId != this.currentCategoryId){
+      this.thePageNumber = 1;
+    }
+    this.previoudCategoryId = this.currentCategoryId;
+    console.log(this.previoudCategoryId);
+    // console.log(this.route.snapshot.paramMap);
+    this.productService.getProductListPagination(this.thePageNumber - 1, this.thePageSize, this.currentCategoryId).subscribe(
       data => {
-        this.products = data;
+        this.products = data._embedded.products;
+        this.thePageNumber = data.page.number + 1;
+        this.thePageSize = data.page.size;
+        this.theTotalElements = data.page.totalElements;
       }
     );
+  }
+
+  updatePageSize(pageSize:string){
+    this.thePageSize = +pageSize;
+    this.thePageNumber = 1;
+    this.listProducts();
   }
 }

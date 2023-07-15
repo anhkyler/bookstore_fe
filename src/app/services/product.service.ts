@@ -4,12 +4,13 @@ import { Product } from '../common/product';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ProductCategory } from '../common/product-category';
+import { PropertyRead } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-
+  
   private baseUrl = 'http://localhost:8080/api/products';
   private categoryUrl = 'http://localhost:8080/api/product-category';
 
@@ -20,6 +21,12 @@ export class ProductService {
     return this.httpClient.get<GetResponseProducts>(searchUrl).pipe(
       map(response => response._embedded.products)
     );
+  }
+
+  getProductListPagination(thePage: number, thepageSize:number,theCategoryId:number): Observable<GetResponseProducts> {
+    const searchUrl = `${this.baseUrl}/search/findByCategoryId?id=${theCategoryId}`
+                      + `&page=${thePage}&size=${thepageSize}`;
+    return this.httpClient.get<GetResponseProducts>(searchUrl);
   }
 
   getProductCategories(): Observable<ProductCategory[]> {
@@ -36,11 +43,27 @@ export class ProductService {
     );
   }
 
+  getProductBynamePaginate(thePage: number, thepageSize:number,theProductName:string): Observable<GetResponseProducts> {
+    const searchUrl = `${this.baseUrl}/search/findByNameContaining?name=${theProductName}`
+                                + `&page=${thePage}&size=${thepageSize}`;
+    return this.httpClient.get<GetResponseProducts>(searchUrl);
+  }
+
+  getProduct(theProductId: number):Observable<Product> {
+    const productUrl = `${this.baseUrl}/${theProductId}`;
+    return this.httpClient.get<Product>(productUrl);
+  }
 }
 
 interface GetResponseProducts {
   _embedded: {
     products: Product[];
+  },
+  page: {
+    size:number,
+    totalElements: number,
+    totalPages: number,
+    number: number
   }
 }
 
